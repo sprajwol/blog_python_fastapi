@@ -30,7 +30,7 @@ def create_posts(post: schemas.PostCreate, db: Session = Depends(get_db), curren
     # )
     # new_post = cursor.fetchone()
     # conn.commit()
-    new_post = models.Post(**post.dict())
+    new_post = models.Post(owner_id=current_user.id, **post.dict())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
@@ -62,10 +62,16 @@ def delete_post(id: int, db: Session = Depends(get_db), current_user: int = Depe
     # deleted_post = cursor.fetchone()
     # conn.commit()
     post_query = db.query(models.Post).filter(models.Post.id == id)
+    post = post_query.first()
 
-    if post_query.first() == None:
+    if post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with '{id}' was not found.")
+
+    if post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail=f"Not authorized to perform requested action.")
+
     post_query.delete(synchronize_session=False)
     db.commit()
 
@@ -87,6 +93,10 @@ def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends
     if post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with '{id}' was not found.")
+
+    if post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail=f"Not authorized to perform requested action.")
 
     post_query.update(updated_post.dict(), synchronize_session=False)
     db.commit()
