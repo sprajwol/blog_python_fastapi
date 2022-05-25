@@ -4,8 +4,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from psycopg2.extras import RealDictCursor
+from app.config import settings
 
-DB_CONNECTION_STRING = "postgresql://postgres:postgres@localhost/fastapi"
+DB_CONNECTION_STRING = f"postgresql://{settings.database_username}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/{settings.database_name}"
 
 engine = create_engine(DB_CONNECTION_STRING)
 
